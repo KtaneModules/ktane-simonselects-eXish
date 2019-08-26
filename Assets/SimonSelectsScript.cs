@@ -270,6 +270,10 @@ public class SimonSelectsScript : MonoBehaviour
             }
             answer %= 256;
             answer = 256 - answer;
+            if(answer == 256)
+            {
+                answer = 0;
+            }
             r = (byte)answer;
             Debug.LogFormat("[Simon Selects #{0}] Answer Number for Stage 1 is: {1}", moduleId, answer);
         }
@@ -281,6 +285,10 @@ public class SimonSelectsScript : MonoBehaviour
             }
             answer %= 256;
             answer = 256 - answer;
+            if (answer == 256)
+            {
+                answer = 0;
+            }
             g = (byte)answer;
             Debug.LogFormat("[Simon Selects #{0}] Answer Number for Stage 2 is: {1}", moduleId, answer);
         }
@@ -292,6 +300,10 @@ public class SimonSelectsScript : MonoBehaviour
             }
             answer %= 256;
             answer = 256 - answer;
+            if (answer == 256)
+            {
+                answer = 0;
+            }
             b = (byte)answer;
             Debug.LogFormat("[Simon Selects #{0}] Answer Number for Stage 3 is: {1}", moduleId, answer);
         }
