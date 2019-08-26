@@ -245,6 +245,11 @@ public class SimonSelectsScript : MonoBehaviour
                     }
                 }
             }
+            else if (pressed == buttons[9])
+            {
+                audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+                firstpress = false;
+            }
             if (isrunning == false && inputs == 0)
             {
                 flash = StartCoroutine(flashSequence());
@@ -839,11 +844,16 @@ public class SimonSelectsScript : MonoBehaviour
     }
 
     //twitch plays
-    private bool commandIsValid(string s)
+    private bool commandIsValid(string[] s)
     {
+        string temp = "";
+        for(int i = 1; i < s.Length; i++)
+        {
+            temp += s[i];
+        }
         char[] valids = { 'r','o','y','g','b','c','p','m' };
-        s = s.ToLower();
-        foreach(char c in s)
+        temp = temp.ToLower();
+        foreach(char c in temp)
         {
             if (!valids.Contains(c))
             {
@@ -854,7 +864,7 @@ public class SimonSelectsScript : MonoBehaviour
     }
 
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"!{0} select rgm [Selects/Deselects the specified colors where r=red,o=orange,y=yellow,g=green,b=blue,c=cyan,p=purple,m=magenta] | !{0} submit [Submits the selected colors]";
+    private readonly string TwitchHelpMessage = @"!{0} select rgm [Selects/Deselects the specified colors where r=red,o=orange,y=yellow,g=green,b=blue,c=cyan,p=purple,m=magenta] | !{0} submit [Submits the selected colors] | !{0} mute [Presses the mute button]";
     #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand(string command)
@@ -865,116 +875,125 @@ public class SimonSelectsScript : MonoBehaviour
             buttons[8].OnInteract();
             yield break;
         }
+        if (Regex.IsMatch(command, @"^\s*mute\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            yield return null;
+            buttons[9].OnInteract();
+            yield break;
+        }
         string[] parameters = command.Split(' ');
         if (Regex.IsMatch(parameters[0], @"^\s*select\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
         {
-            if(parameters.Length == 2)
+            if (commandIsValid(parameters))
             {
-                if (commandIsValid(parameters[1]))
+                yield return null;
+                string temp = "";
+                for (int i = 1; i < parameters.Length; i++)
                 {
-                    yield return null;
-                    for(int i = 0; i < parameters[1].Length; i++)
-                    {
-                        if (parameters[1].ElementAt(i).Equals('r'))
-                        {
-                            int index = 0;
-                            for(int j = 0; j < buttonvals.Length; j++)
-                            {
-                                if(buttonvals[j] == 1)
-                                {
-                                    index = j;
-                                }
-                            }
-                            buttons[index].OnInteract();
-                        }
-                        else if (parameters[1].ElementAt(i).Equals('o'))
-                        {
-                            int index = 0;
-                            for (int j = 0; j < buttonvals.Length; j++)
-                            {
-                                if (buttonvals[j] == 2)
-                                {
-                                    index = j;
-                                }
-                            }
-                            buttons[index].OnInteract();
-                        }
-                        else if (parameters[1].ElementAt(i).Equals('y'))
-                        {
-                            int index = 0;
-                            for (int j = 0; j < buttonvals.Length; j++)
-                            {
-                                if (buttonvals[j] == 4)
-                                {
-                                    index = j;
-                                }
-                            }
-                            buttons[index].OnInteract();
-                        }
-                        else if (parameters[1].ElementAt(i).Equals('g'))
-                        {
-                            int index = 0;
-                            for (int j = 0; j < buttonvals.Length; j++)
-                            {
-                                if (buttonvals[j] == 8)
-                                {
-                                    index = j;
-                                }
-                            }
-                            buttons[index].OnInteract();
-                        }
-                        else if (parameters[1].ElementAt(i).Equals('c'))
-                        {
-                            int index = 0;
-                            for (int j = 0; j < buttonvals.Length; j++)
-                            {
-                                if (buttonvals[j] == 16)
-                                {
-                                    index = j;
-                                }
-                            }
-                            buttons[index].OnInteract();
-                        }
-                        else if (parameters[1].ElementAt(i).Equals('b'))
-                        {
-                            int index = 0;
-                            for (int j = 0; j < buttonvals.Length; j++)
-                            {
-                                if (buttonvals[j] == 32)
-                                {
-                                    index = j;
-                                }
-                            }
-                            buttons[index].OnInteract();
-                        }
-                        else if (parameters[1].ElementAt(i).Equals('p'))
-                        {
-                            int index = 0;
-                            for (int j = 0; j < buttonvals.Length; j++)
-                            {
-                                if (buttonvals[j] == 64)
-                                {
-                                    index = j;
-                                }
-                            }
-                            buttons[index].OnInteract();
-                        }
-                        else if (parameters[1].ElementAt(i).Equals('m'))
-                        {
-                            int index = 0;
-                            for (int j = 0; j < buttonvals.Length; j++)
-                            {
-                                if (buttonvals[j] == 128)
-                                {
-                                    index = j;
-                                }
-                            }
-                            buttons[index].OnInteract();
-                        }
-                        yield return new WaitForSeconds(0.25f);
-                    }
-                    yield break;
+                    temp += parameters[i];
                 }
+                temp = temp.ToLower();
+                for (int i = 0; i < temp.Length; i++)
+                {
+                    if (temp.ElementAt(i).Equals('r'))
+                    {
+                        int index = 0;
+                        for (int j = 0; j < buttonvals.Length; j++)
+                        {
+                            if (buttonvals[j] == 1)
+                            {
+                                index = j;
+                            }
+                        }
+                        buttons[index].OnInteract();
+                    }
+                    else if (temp.ElementAt(i).Equals('o'))
+                    {
+                        int index = 0;
+                        for (int j = 0; j < buttonvals.Length; j++)
+                        {
+                            if (buttonvals[j] == 2)
+                            {
+                                index = j;
+                            }
+                        }
+                        buttons[index].OnInteract();
+                    }
+                    else if (temp.ElementAt(i).Equals('y'))
+                    {
+                        int index = 0;
+                        for (int j = 0; j < buttonvals.Length; j++)
+                        {
+                            if (buttonvals[j] == 4)
+                            {
+                                index = j;
+                            }
+                        }
+                        buttons[index].OnInteract();
+                    }
+                    else if (temp.ElementAt(i).Equals('g'))
+                    {
+                        int index = 0;
+                        for (int j = 0; j < buttonvals.Length; j++)
+                        {
+                            if (buttonvals[j] == 8)
+                            {
+                                index = j;
+                            }
+                        }
+                        buttons[index].OnInteract();
+                    }
+                    else if (temp.ElementAt(i).Equals('c'))
+                    {
+                        int index = 0;
+                        for (int j = 0; j < buttonvals.Length; j++)
+                        {
+                            if (buttonvals[j] == 16)
+                            {
+                                index = j;
+                            }
+                        }
+                        buttons[index].OnInteract();
+                    }
+                    else if (temp.ElementAt(i).Equals('b'))
+                    {
+                        int index = 0;
+                        for (int j = 0; j < buttonvals.Length; j++)
+                        {
+                            if (buttonvals[j] == 32)
+                            {
+                                index = j;
+                            }
+                        }
+                        buttons[index].OnInteract();
+                    }
+                    else if (temp.ElementAt(i).Equals('p'))
+                    {
+                        int index = 0;
+                        for (int j = 0; j < buttonvals.Length; j++)
+                        {
+                            if (buttonvals[j] == 64)
+                            {
+                                index = j;
+                            }
+                        }
+                        buttons[index].OnInteract();
+                    }
+                    else if (temp.ElementAt(i).Equals('m'))
+                    {
+                        int index = 0;
+                        for (int j = 0; j < buttonvals.Length; j++)
+                        {
+                            if (buttonvals[j] == 128)
+                            {
+                                index = j;
+                            }
+                        }
+                        buttons[index].OnInteract();
+                    }
+                    yield return new WaitForSeconds(0.25f);
+                }
+                yield break;
             }
         }
     }
