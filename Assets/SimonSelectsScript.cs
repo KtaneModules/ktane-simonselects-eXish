@@ -997,5 +997,68 @@ public class SimonSelectsScript : MonoBehaviour
             }
         }
     }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        yield return null;
+        for(int i = 0; i < stage; i++)
+        {
+            string build = "";
+            int temp = answer;
+            if ((temp - 128) >= 0)
+            {
+                temp -= 128;
+                build += "m";
+            }
+            if ((temp - 64) >= 0)
+            {
+                temp -= 64;
+                build += "p";
+            }
+            if ((temp - 32) >= 0)
+            {
+                temp -= 32;
+                build += "b";
+            }
+            if ((temp - 16) >= 0)
+            {
+                temp -= 16;
+                build += "c";
+            }
+            if ((temp - 8) >= 0)
+            {
+                temp -= 8;
+                build += "g";
+            }
+            if ((temp - 4) >= 0)
+            {
+                temp -= 4;
+                build += "y";
+            }
+            if ((temp - 2) >= 0)
+            {
+                temp -= 2;
+                build += "o";
+            }
+            if ((temp - 1) >= 0)
+            {
+                temp -= 1;
+                build += "r";
+            }
+            yield return ProcessTwitchCommand("select "+build);
+            yield return ProcessTwitchCommand("submit");
+            while(flashing == true)
+            {
+                if(stage == 3)
+                {
+                    yield return true;
+                }
+                else
+                {
+                    yield return new WaitForSeconds(0.1f);
+                }
+            }
+        }
+    }
 }
 
