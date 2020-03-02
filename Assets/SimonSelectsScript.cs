@@ -864,7 +864,7 @@ public class SimonSelectsScript : MonoBehaviour
     }
 
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"!{0} select rgm [Selects/Deselects the specified colors where r=red,o=orange,y=yellow,g=green,b=blue,c=cyan,p=purple,m=magenta] | !{0} submit [Submits the selected colors] | !{0} mute [Presses the mute button]";
+    private readonly string TwitchHelpMessage = @"!{0} select <colors> [Selects/Deselects the specified colors where r=red,o=orange,y=yellow,g=green,b=blue,c=cyan,p=purple,m=magenta] | !{0} submit [Submits the selected colors] | !{0} mute [Presses the mute button]";
     #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand(string command)
@@ -872,6 +872,13 @@ public class SimonSelectsScript : MonoBehaviour
         if (Regex.IsMatch(command, @"^\s*submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
         {
             yield return null;
+            if (stage == 3)
+            {
+                if (total == answer)
+                {
+                    yield return "solve";
+                }
+            }
             buttons[8].OnInteract();
             yield break;
         }
@@ -1049,14 +1056,8 @@ public class SimonSelectsScript : MonoBehaviour
             yield return ProcessTwitchCommand("submit");
             while(flashing == true)
             {
-                if(stage == 3)
-                {
-                    yield return true;
-                }
-                else
-                {
-                    yield return new WaitForSeconds(0.1f);
-                }
+                yield return true;
+                yield return new WaitForSeconds(0.1f);
             }
         }
     }
