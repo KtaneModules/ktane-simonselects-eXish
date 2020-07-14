@@ -61,6 +61,11 @@ public class SimonSelectsScript : MonoBehaviour
 
     void Start()
     {
+        float scalar = transform.lossyScale.x;
+        foreach (Light l in lights)
+        {
+            l.range *= scalar;
+        }
         stage = 1;
         total = 0;
         answer = 0;
@@ -866,7 +871,6 @@ public class SimonSelectsScript : MonoBehaviour
     #pragma warning disable 414
     private readonly string TwitchHelpMessage = @"!{0} select <colors> [Selects/Deselects the specified colors where r=red,o=orange,y=yellow,g=green,b=blue,c=cyan,p=purple,m=magenta] | !{0} submit [Submits the selected colors] | !{0} mute [Presses the mute button]";
     #pragma warning restore 414
-
     IEnumerator ProcessTwitchCommand(string command)
     {
         if (Regex.IsMatch(command, @"^\s*submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
@@ -1054,7 +1058,7 @@ public class SimonSelectsScript : MonoBehaviour
             }
             yield return ProcessTwitchCommand("select "+build);
             yield return ProcessTwitchCommand("submit");
-            while(flashing == true)
+            while (flashing == true)
             {
                 yield return true;
                 yield return new WaitForSeconds(0.1f);
