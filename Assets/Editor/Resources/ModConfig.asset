@@ -23,11 +23,11 @@ MonoBehaviour:
     PDF: https://ktane.timwi.de/PDF/Simon%20Selects.pdf
 
 
-    Simon Selects (simonSelectsModule) v1.0.8
+    Simon Selects (simonSelectsModule) v1.0.9
 
     Module Idea by EpicToast, implemented by eXish
 
     Twitch Plays supported'
-  version: 1.0.8
+  version: 1.0.9
   outputFolder: build
   previewImage: {fileID: 2800000, guid: d0598640432e8174eb65cf22f87d517d, type: 3}
