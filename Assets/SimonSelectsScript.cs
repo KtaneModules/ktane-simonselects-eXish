@@ -9,12 +9,14 @@ public class SimonSelectsScript : MonoBehaviour
 
     public KMAudio audio;
     public KMBombInfo bomb;
+    public KMColorblindMode colorblind;
 
     public KMSelectable[] buttons;
     private int[] stg1order;
     private int[] stg2order;
     private int[] stg3order;
 
+    public GameObject smile;
     public Renderer[] buttonrend;
     public Material[] buttonmats;
     private int[] buttonvals = new int[8];
@@ -24,8 +26,10 @@ public class SimonSelectsScript : MonoBehaviour
 
     public Light[] lights;
     public Color[] lightcols;
+    public TextMesh[] cbtexts;
 
     private bool nointeract = false;
+    private bool cbenabled = false;
 
     private Material customMat;
     private Color answerCol;
@@ -62,10 +66,13 @@ public class SimonSelectsScript : MonoBehaviour
             pressed.OnInteract += delegate () { PressButton(pressed); return false; };
         }
         customMat = new Material(Shader.Find("KT/Mobile/DiffuseTint"));
+        GetComponent<KMBombModule>().OnActivate += OnActivate;
     }
 
     void Start()
     {
+        if (colorblind.ColorblindModeActive)
+            cbenabled = true;
         float scalar = transform.lossyScale.x;
         foreach (Light l in lights)
         {
@@ -76,9 +83,20 @@ public class SimonSelectsScript : MonoBehaviour
         answer = 0;
         inputs = 0;
         customMat.color = new Color(0f, 0f, 0f);
+        smile.SetActive(false);
         generateButtons();
         generateOrders();
         generateAnswer();
+    }
+
+    void OnActivate()
+    {
+        smile.SetActive(true);
+        if (cbenabled)
+        {
+            for (int i = 0; i < 8; i++)
+                cbtexts[i].text = buttonrend[i].material.name[0].ToString();
+        }
         flash = StartCoroutine(flashSequence());
     }
 
@@ -887,10 +905,27 @@ public class SimonSelectsScript : MonoBehaviour
     }
 
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"!{0} select <colors> [Selects/Deselects the specified colors where r=red,o=orange,y=yellow,g=green,b=blue,c=cyan,p=purple,m=magenta] | !{0} submit [Submits the selected colors] | !{0} mute [Presses the mute button]";
+    private readonly string TwitchHelpMessage = @"!{0} select <colors> [Selects/Deselects the specified colors where r=red,o=orange,y=yellow,g=green,b=blue,c=cyan,p=purple,m=magenta] | !{0} submit [Submits the selected colors] | !{0} mute [Presses the mute button] | !{0} colorblind [Toggles colorblind mode]";
     #pragma warning restore 414
     IEnumerator ProcessTwitchCommand(string command)
     {
+        if (Regex.IsMatch(command, @"^\s*colorblind\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            yield return null;
+            if (cbenabled)
+            {
+                cbenabled = false;
+                for (int i = 0; i < 8; i++)
+                    cbtexts[i].text = "";
+            }
+            else
+            {
+                cbenabled = true;
+                for (int i = 0; i < 8; i++)
+                    cbtexts[i].text = buttonrend[i].material.name[0].ToString();
+            }
+            yield break;
+        }
         if (Regex.IsMatch(command, @"^\s*submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
         {
             yield return null;
