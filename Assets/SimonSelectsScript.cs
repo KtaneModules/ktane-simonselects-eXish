@@ -1,10 +1,8 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using KModkit;
 using System.Text.RegularExpressions;
-using System;
+using System.Collections.Generic;
 
 public class SimonSelectsScript : MonoBehaviour
 {
@@ -27,7 +25,7 @@ public class SimonSelectsScript : MonoBehaviour
     public Light[] lights;
     public Color[] lightcols;
 
-    private bool flashing = false;
+    private bool nointeract = false;
 
     private Material customMat;
     private Color answerCol;
@@ -47,10 +45,17 @@ public class SimonSelectsScript : MonoBehaviour
     private Coroutine flash;
     private bool isrunning = false;
 
+    private SimonSelectsSettings Settings = new SimonSelectsSettings();
+
     void Awake()
     {
         moduleId = moduleIdCounter++;
         moduleSolved = false;
+        ModConfig<SimonSelectsSettings> modConfig = new ModConfig<SimonSelectsSettings>("SimonSelectsSettings");
+        //Read from the settings file, or create one if one doesn't exist
+        Settings = modConfig.Settings;
+        //Update the settings file incase there was an error during read
+        modConfig.Settings = Settings;
         foreach (KMSelectable obj in buttons)
         {
             KMSelectable pressed = obj;
@@ -79,7 +84,7 @@ public class SimonSelectsScript : MonoBehaviour
 
     void PressButton(KMSelectable pressed)
     {
-        if (moduleSolved != true)
+        if (moduleSolved != true && nointeract == false)
         {
             pressed.AddInteractionPunch(0.25f);
             if (firstpress == false)
@@ -222,7 +227,7 @@ public class SimonSelectsScript : MonoBehaviour
             }
             else if (pressed == buttons[8])
             {
-                if(flashing == false && inputs > 0)
+                if (inputs > 0)
                 {
                     if (answer == total)
                     {
@@ -230,14 +235,21 @@ public class SimonSelectsScript : MonoBehaviour
                         {
                             Debug.LogFormat("[Simon Selects #{0}] Inputted Number Total is: {1}, which is correct! Module Disarmed!", moduleId, total);
                             clearLights();
-                            audio.HandlePlaySoundAtTransform("victory", transform);
+                            stage++;
+                            if (!Settings.noCopyrightMusic)
+                                audio.HandlePlaySoundAtTransform("victory", transform);
+                            else
+                                audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.CorrectChime, transform);
                             StartCoroutine(victory());
                         }
                         else
                         {
                             Debug.LogFormat("[Simon Selects #{0}] Inputted Number Total is: {1}, which is correct!", moduleId, total);
                             clearLights();
-                            audio.HandlePlaySoundAtTransform("correctans", transform);
+                            if (!Settings.noCopyrightMusic)
+                                audio.HandlePlaySoundAtTransform("correctans", transform);
+                            else
+                                audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.CorrectChime, transform);
                             StartCoroutine(correctFlash());
                         }
                     }
@@ -252,7 +264,7 @@ public class SimonSelectsScript : MonoBehaviour
             }
             else if (pressed == buttons[9])
             {
-                audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
+                audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, pressed.transform);
                 firstpress = false;
             }
             if (isrunning == false && inputs == 0)
@@ -280,7 +292,7 @@ public class SimonSelectsScript : MonoBehaviour
             }
             answer %= 256;
             answer = 256 - answer;
-            if(answer == 256)
+            if (answer == 256)
             {
                 answer = 1;
             }
@@ -470,13 +482,14 @@ public class SimonSelectsScript : MonoBehaviour
 
     private IEnumerator wrongFlash()
     {
-        flashing = true;
         buttons[8].GetComponentInChildren<TextMesh>().text = ":(";
         for(int i = 0; i < 8; i++)
         {
             buttons[i].OnInteract();
         }
+        nointeract = true;
         yield return new WaitForSeconds(1.0f);
+        nointeract = false;
         for (int i = 0; i < 8; i++)
         {
             buttons[i].OnInteract();
@@ -485,87 +498,92 @@ public class SimonSelectsScript : MonoBehaviour
         total = 0;
         buttons[8].GetComponentInChildren<TextMesh>().text = ":)";
         flash = StartCoroutine(flashSequence());
-        flashing = false;
         StopCoroutine("wrongFlash");
     }
 
     private IEnumerator victory()
     {
+        nointeract = true;
         for (int i = 0; i < 8; i++)
         {
             lights[i].enabled = true;
         }
-        yield return new WaitForSeconds(1.5f);
+        if (!Settings.noCopyrightMusic)
+            yield return new WaitForSeconds(1.5f);
         answerCol = new Color32(r, g, b, 255);
         customMat.color = answerCol;
         buttons[8].GetComponent<Renderer>().material = customMat;
+        nointeract = false;
         moduleSolved = true;
         GetComponent<KMBombModule>().HandlePass();
     }
 
     private IEnumerator correctFlash()
     {
-        flashing = true;
-        for (int i = 0; i < lights.Length; i++)
+        nointeract = true;
+        if (!Settings.noCopyrightMusic)
         {
-            lights[i].enabled = true;
-            yield return new WaitForSeconds(0.1f);
-        }
-        for (int i = 0; i < 8; i++)
-        {
-            lights[i].enabled = false;
-        }
-        yield return new WaitForSeconds(0.2f);
-        for (int i = 0; i < 8; i++)
-        {
-            lights[i].enabled = true;
-        }
-        yield return new WaitForSeconds(0.2f);
-        for (int i = 0; i < 8; i++)
-        {
-            lights[i].enabled = false;
-        }
-        yield return new WaitForSeconds(0.2f);
-        for (int i = 0; i < 8; i++)
-        {
-            lights[i].enabled = true;
-        }
-        yield return new WaitForSeconds(0.5f);
-        for (int i = 0; i < lights.Length; i++)
-        {
-            lights[i].enabled = false;
-            yield return new WaitForSeconds(0.1f);
-        }
-        for (int i = 0; i < 8; i++)
-        {
-            lights[i].enabled = false;
-        }
-        yield return new WaitForSeconds(0.2f);
-        for (int i = 0; i < 8; i++)
-        {
-            lights[i].enabled = true;
-        }
-        yield return new WaitForSeconds(0.2f);
-        for (int i = 0; i < 8; i++)
-        {
-            lights[i].enabled = false;
-        }
-        yield return new WaitForSeconds(0.2f);
-        for (int i = 0; i < 8; i++)
-        {
-            lights[i].enabled = true;
-        }
-        yield return new WaitForSeconds(0.2f);
-        for (int i = 0; i < 8; i++)
-        {
-            lights[i].enabled = false;
+            for (int i = 0; i < lights.Length; i++)
+            {
+                lights[i].enabled = true;
+                yield return new WaitForSeconds(0.1f);
+            }
+            for (int i = 0; i < 8; i++)
+            {
+                lights[i].enabled = false;
+            }
+            yield return new WaitForSeconds(0.2f);
+            for (int i = 0; i < 8; i++)
+            {
+                lights[i].enabled = true;
+            }
+            yield return new WaitForSeconds(0.2f);
+            for (int i = 0; i < 8; i++)
+            {
+                lights[i].enabled = false;
+            }
+            yield return new WaitForSeconds(0.2f);
+            for (int i = 0; i < 8; i++)
+            {
+                lights[i].enabled = true;
+            }
+            yield return new WaitForSeconds(0.5f);
+            for (int i = 0; i < lights.Length; i++)
+            {
+                lights[i].enabled = false;
+                yield return new WaitForSeconds(0.1f);
+            }
+            for (int i = 0; i < 8; i++)
+            {
+                lights[i].enabled = false;
+            }
+            yield return new WaitForSeconds(0.2f);
+            for (int i = 0; i < 8; i++)
+            {
+                lights[i].enabled = true;
+            }
+            yield return new WaitForSeconds(0.2f);
+            for (int i = 0; i < 8; i++)
+            {
+                lights[i].enabled = false;
+            }
+            yield return new WaitForSeconds(0.2f);
+            for (int i = 0; i < 8; i++)
+            {
+                lights[i].enabled = true;
+            }
+            yield return new WaitForSeconds(0.2f);
+            for (int i = 0; i < 8; i++)
+            {
+                lights[i].enabled = false;
+            }
         }
         inputs = 0;
         total = 0;
         stage++;
         generateAnswer();
         flash = StartCoroutine(flashSequence());
-        flashing = false;
+        nointeract = false;
         StopCoroutine("correctFlash");
     }
 
@@ -1012,10 +1030,12 @@ public class SimonSelectsScript : MonoBehaviour
     IEnumerator TwitchHandleForcedSolve()
     {
         yield return null;
-        for(int i = 0; i < stage; i++)
+        while (nointeract) { yield return true; }
+        int start = stage;
+        for (int i = start; i < 4; i++)
         {
             string build = "";
-            int temp = answer;
+            int temp = total;
             if ((temp - 128) >= 0)
             {
                 temp -= 128;
@@ -1056,14 +1076,91 @@ public class SimonSelectsScript : MonoBehaviour
                 temp -= 1;
                 build += "r";
             }
-            yield return ProcessTwitchCommand("select "+build);
-            yield return ProcessTwitchCommand("submit");
-            while (flashing == true)
+            string build2 = "";
+            int temp2 = answer;
+            if ((temp2 - 128) >= 0)
             {
-                yield return true;
-                yield return new WaitForSeconds(0.1f);
+                temp2 -= 128;
+                build2 += "m";
             }
+            if ((temp2 - 64) >= 0)
+            {
+                temp2 -= 64;
+                build2 += "p";
+            }
+            if ((temp2 - 32) >= 0)
+            {
+                temp2 -= 32;
+                build2 += "b";
+            }
+            if ((temp2 - 16) >= 0)
+            {
+                temp2 -= 16;
+                build2 += "c";
+            }
+            if ((temp2 - 8) >= 0)
+            {
+                temp2 -= 8;
+                build2 += "g";
+            }
+            if ((temp2 - 4) >= 0)
+            {
+                temp2 -= 4;
+                build2 += "y";
+            }
+            if ((temp2 - 2) >= 0)
+            {
+                temp2 -= 2;
+                build2 += "o";
+            }
+            if ((temp2 - 1) >= 0)
+            {
+                temp2 -= 1;
+                build2 += "r";
+            }
+            for (int j = 0; j < build.Length; j++)
+            {
+                if (build2.Contains(build[j]))
+                {
+                    char replace = build[j];
+                    build = build.Replace(replace, ' ');
+                    build2 = build2.Replace(replace, ' ');
+                }
+            }
+            if (build.Length != 0)
+            {
+                build = build.Replace(" ", "");
+                yield return ProcessTwitchCommand("select "+build);
+            }
+            if (build2.Length != 0)
+            {
+                build2 = build2.Replace(" ", "");
+                yield return ProcessTwitchCommand("select "+build2);
+            }
+            yield return ProcessTwitchCommand("submit");
+            while (nointeract == true) { yield return true; }
         }
+        while (moduleSolved == false) { yield return true; }
     }
-}
 
+    class SimonSelectsSettings
+    {
+        public bool noCopyrightMusic = false;
+    }
+
+    static Dictionary<string, object>[] TweaksEditorSettings = new Dictionary<string, object>[]
+    {
+        new Dictionary<string, object>
+        {
+            { "Filename", "SimonSelectsSettings.json" },
+            { "Name", "Simon Selects Settings" },
+            { "Listing", new List<Dictionary<string, object>>{
+                new Dictionary<string, object>
+                {
+                    { "Key", "noCopyrightMusic" },
+                    { "Text", "Disables the copyright music normally played by the module." }
+                },
+            } }
+        }
+    };
+}
